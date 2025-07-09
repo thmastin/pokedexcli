@@ -5,5 +5,10 @@ import (
 )
 
 func main() {
-	fmt.Println("Hello World!")
+	fmt.Println("Hello, World!")
+
+}
+
+func cleanInput(text string) []string {
+	return []string{}
 }
