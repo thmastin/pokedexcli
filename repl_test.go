@@ -21,6 +21,14 @@ func TestCleanInput(t *testing.T) {
 			input:    "   HELLO   world",
 			expected: []string{"hello", "world"},
 		},
+		{
+			input:    "",
+			expected: []string{},
+		},
+		{
+			input:    "   ",
+			expected: []string{},
+		},
 	}
 	for _, c := range cases {
 		actual := cleanInput(c.input)
@@ -41,4 +49,37 @@ func TestCleanInput(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestGetFirstWord(t *testing.T) {
+	cases := []struct {
+		name     string
+		input    []string
+		expected string
+	}{
+		{
+			name:     "normal input",
+			input:    []string{"hello", "world"},
+			expected: "hello",
+		},
+		{
+			name:     "single word",
+			input:    []string{"pokeman"},
+			expected: "pokeman",
+		},
+		{
+			name:     "empty slice",
+			input:    []string{},
+			expected: "",
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			actual := GetFirstWord(c.input)
+			if actual != c.expected {
+				t.Errorf("Expected: %v, Got: %v", c.expected, actual)
+			}
+		})
+	}
+
 }
