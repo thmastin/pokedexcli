@@ -83,11 +83,38 @@ func TestGetFirstWord(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			actual := GetFirstWord(c.input)
+			actual := getFirstWord(c.input)
 			if actual != c.expected {
 				t.Errorf("Expected: %v, Got: %v", c.expected, actual)
 			}
 		})
 	}
 
+}
+
+func TestDisplayOutput(t *testing.T) {
+	cases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "normal input",
+			input:    "hello",
+			expected: "Your command was: hello\n",
+		},
+		{
+			name:     "empty input",
+			input:    "",
+			expected: "Please enter a command\n",
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			actual := displayOutput(c.input)
+			if actual != c.expected {
+				t.Errorf("Expected: %v, Got: %v", c.expected, actual)
+			}
+		})
+	}
 }

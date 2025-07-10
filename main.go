@@ -14,8 +14,8 @@ func main() {
 		scanner.Scan()
 		userInput := scanner.Text()
 		inputCleaned := cleanInput(userInput)
-		firstWord := GetFirstWord((inputCleaned))
-		fmt.Printf("Your command was: %s\n", firstWord)
+		firstWord := getFirstWord((inputCleaned))
+		fmt.Print(displayOutput((firstWord)))
 	}
 
 }
@@ -26,9 +26,16 @@ func cleanInput(text string) []string {
 	return splitText
 }
 
-func GetFirstWord(words []string) string {
+func getFirstWord(words []string) string {
 	if len(words) == 0 {
 		return ""
 	}
 	return words[0]
+}
+
+func displayOutput(word string) string {
+	if word == "" {
+		return "Please enter a command\n"
+	}
+	return fmt.Sprintf("Your command was: %s\n", word)
 }
