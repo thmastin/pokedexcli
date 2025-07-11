@@ -36,9 +36,13 @@ func displayOutput(word string) string {
 func startREPL(scanner *bufio.Scanner) {
 	for {
 		fmt.Print("Pokedex > ")
-		scanner.Scan()
-		userInput := scanner.Text()
-		command := processCommand(userInput)
+		if !scanner.Scan() {
+			if err := scanner.Err(); err != nil {
+				fmt.Printf("Error reading input %v\n", err)
+			}
+			break
+		}
+		command := processCommand(scanner.Text())
 		fmt.Print(displayOutput((command)))
 	}
 }
