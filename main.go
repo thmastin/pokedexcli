@@ -43,7 +43,7 @@ func startREPL(scanner *bufio.Scanner) {
 			break
 		}
 		command := processCommand(scanner.Text())
-		fmt.Print(displayOutput((command)))
+
 	}
 }
 
@@ -51,4 +51,24 @@ func processCommand(userInput string) string {
 	inputCleaned := cleanInput(userInput)
 	firstWord := getFirstWord((inputCleaned))
 	return firstWord
+}
+
+func commandExit() error {
+	fmt.Sprintf("Closing the Pokedex... Goodbye!")
+	os.Exit(0)
+	return nil
+}
+
+type cliCommand struct {
+	name string
+	description string
+	callback func() error
+}
+
+map[string]cliCommand {
+	"exit": {
+		name: "exit",
+		description: "Exit the Pokedex",
+		callback: commandExit,
+	}
 }
