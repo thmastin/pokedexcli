@@ -9,14 +9,7 @@ import (
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
-	for {
-		fmt.Print("Pokedex > ")
-		scanner.Scan()
-		userInput := scanner.Text()
-		inputCleaned := cleanInput(userInput)
-		firstWord := getFirstWord((inputCleaned))
-		fmt.Print(displayOutput((firstWord)))
-	}
+	startREPL((scanner))
 
 }
 
@@ -38,4 +31,15 @@ func displayOutput(word string) string {
 		return "Please enter a command\n"
 	}
 	return fmt.Sprintf("Your command was: %s\n", word)
+}
+
+func startREPL(scanner *bufio.Scanner) {
+	for {
+		fmt.Print("Pokedex > ")
+		scanner.Scan()
+		userInput := scanner.Text()
+		inputCleaned := cleanInput(userInput)
+		firstWord := getFirstWord((inputCleaned))
+		fmt.Print(displayOutput((firstWord)))
+	}
 }
