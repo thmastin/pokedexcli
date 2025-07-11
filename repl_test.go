@@ -118,3 +118,45 @@ func TestDisplayOutput(t *testing.T) {
 		})
 	}
 }
+
+func TestProcessCommand(t *testing.T) {
+	cases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "one word input no caps and no spaces",
+			input:    "hello",
+			expected: "hello",
+		},
+		{
+			name:     "one word input with caps",
+			input:    "HELLO",
+			expected: "hello",
+		},
+		{
+			name:     "Multi word input with caps",
+			input:    "This is a test command a user may submit",
+			expected: "this",
+		},
+		{
+			name:     "Empty input",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "Input all spaces",
+			input:    "     ",
+			expected: "",
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			actual := processCommand(c.input)
+			if actual != c.expected {
+				t.Errorf("Expected: %v, Actual: %v", c.expected, actual)
+			}
+		})
+	}
+}

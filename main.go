@@ -38,8 +38,13 @@ func startREPL(scanner *bufio.Scanner) {
 		fmt.Print("Pokedex > ")
 		scanner.Scan()
 		userInput := scanner.Text()
-		inputCleaned := cleanInput(userInput)
-		firstWord := getFirstWord((inputCleaned))
-		fmt.Print(displayOutput((firstWord)))
+		command := processCommand(userInput)
+		fmt.Print(displayOutput((command)))
 	}
+}
+
+func processCommand(userInput string) string {
+	inputCleaned := cleanInput(userInput)
+	firstWord := getFirstWord((inputCleaned))
+	return firstWord
 }
