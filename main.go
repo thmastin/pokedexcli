@@ -2,7 +2,10 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"strings"
 )
@@ -95,8 +98,36 @@ Usage:`
 }
 
 func commandMap() error {
-	fmt.Println("You called this comand")
+	res, err := http.Get("https://pokeapi.co/api/v2/location-area/")
+	if err != nil {
+		return fmt.Errorf("failed to get response from endpoint: %v", err)
+	}
+	body, err := io.ReadAll(res.Body)
+	res.Body.Close()
+	if res.StatusCode > 299 {
+		return fmt.Errorf("response failed with status code: %v and body: %s", res.StatusCode, body)
+	}
+	if err != nil {
+		return fmt.Errorf("error reading response %v", err)
+	}
+	area := locationArea{}
+	if err := json.Unmarshal(body, &area); err != nil {
+		return fmt.Errorf("error unmarshalling data: %v", err)
+	}
+	for _, result := range area.Results {
+		fmt.Println(result.Name)
+	}
 	return nil
+}
+
+type locationArea struct {
+	Count    int    `json:"count"`
+	Next     string `json:"next"`
+	Previous any    `json:"previous"`
+	Results  []struct {
+		Name string `json:"name"`
+		URL  string `json:"url"`
+	} `json:"results"`
 }
 
 func init() {
