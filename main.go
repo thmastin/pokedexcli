@@ -94,6 +94,11 @@ Usage:`
 
 }
 
+func commandMap() error {
+	fmt.Println("You called this comand")
+	return nil
+}
+
 func init() {
 	commands = map[string]cliCommand{
 		"help": {
@@ -105,6 +110,11 @@ func init() {
 			name:        "exit",
 			description: "Exit the Pokedex",
 			callback:    commandExit,
+		},
+		"map": {
+			name:        "map",
+			description: "Displays 20 location areas",
+			callback:    commandMap,
 		},
 	}
 }
