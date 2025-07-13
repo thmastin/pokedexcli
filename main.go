@@ -78,6 +78,7 @@ type cliCommand struct {
 	name        string
 	description string
 	callback    func() error
+	config      *config
 }
 
 func commandHelp() error {
@@ -99,7 +100,9 @@ Usage:`
 }
 
 func commandMap() error {
-	res, err := http.Get(mapConfig.Next)
+	config := commands["map"].config
+
+	res, err := http.Get(config.Next)
 	if err != nil {
 		return fmt.Errorf("failed to get response from endpoint: %v", err)
 	}
@@ -115,8 +118,8 @@ func commandMap() error {
 	if err := json.Unmarshal(body, &areaMap); err != nil {
 		return fmt.Errorf("error unmarshalling data: %v", err)
 	}
-	mapConfig.Previous = mapConfig.Next
-	mapConfig.Next = areaMap.Next
+	config.Previous = config.Next
+	config.Next = areaMap.Next
 
 	for _, result := range areaMap.Results {
 		fmt.Println(result.Name)
@@ -124,10 +127,42 @@ func commandMap() error {
 	return nil
 }
 
+func commandMapb() error {
+	config := commands["mapb"].config
+	if config.Previous == "" {
+		fmt.Println("you're on the first page")
+		return nil
+	}
+	res, err := http.Get(config.Previous)
+	if err != nil {
+		return fmt.Errorf("failed to get response from endpoint: %v", err)
+	}
+	body, err := io.ReadAll(res.Body)
+	res.Body.Close()
+	if res.StatusCode > 299 {
+		return fmt.Errorf("response failed with status code: %v and body: %s", res.StatusCode, body)
+	}
+	if err != nil {
+		return fmt.Errorf("error reading response %v", err)
+	}
+	areaMap := locationArea{}
+	if err := json.Unmarshal(body, &areaMap); err != nil {
+		return fmt.Errorf("error unmarshalling data: %v", err)
+	}
+	config.Next = config.Previous
+	config.Previous = areaMap.Previous
+
+	for _, result := range areaMap.Results {
+		fmt.Println(result.Name)
+	}
+
+	return nil
+}
+
 type locationArea struct {
 	Count    int    `json:"count"`
 	Next     string `json:"next"`
-	Previous any    `json:"previous"`
+	Previous string `json:"previous"`
 	Results  []struct {
 		Name string `json:"name"`
 		URL  string `json:"url"`
@@ -136,7 +171,7 @@ type locationArea struct {
 
 type config struct {
 	Next     string
-	Previous any
+	Previous string
 }
 
 func init() {
@@ -145,16 +180,25 @@ func init() {
 			name:        "help",
 			description: "Displays a help message",
 			callback:    commandHelp,
+			config:      nil,
 		},
 		"exit": {
 			name:        "exit",
 			description: "Exit the Pokedex",
 			callback:    commandExit,
+			config:      nil,
 		},
 		"map": {
 			name:        "map",
 			description: "Displays 20 location areas",
 			callback:    commandMap,
+			config:      &mapConfig,
+		},
+		"mapb": {
+			name:        "mapb",
+			description: "Displays previous 20 location areas",
+			callback:    commandMapb,
+			config:      &mapConfig,
 		},
 	}
 
