@@ -2,12 +2,11 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"strings"
+
+	"github.com/thmastin/pokedexcli/internal/pokeapi"
 )
 
 var commands map[string]cliCommand
@@ -102,76 +101,53 @@ Usage:`
 func commandMap() error {
 	config := commands["map"].config
 
-	res, err := http.Get(config.Next)
+	areaMap, err := pokeapi.FetchLocationAreas(*config.Next)
 	if err != nil {
-		return fmt.Errorf("failed to get response from endpoint: %v", err)
+		return err
 	}
-	body, err := io.ReadAll(res.Body)
-	res.Body.Close()
-	if res.StatusCode > 299 {
-		return fmt.Errorf("response failed with status code: %v and body: %s", res.StatusCode, body)
-	}
-	if err != nil {
-		return fmt.Errorf("error reading response %v", err)
-	}
-	areaMap := locationArea{}
-	if err := json.Unmarshal(body, &areaMap); err != nil {
-		return fmt.Errorf("error unmarshalling data: %v", err)
-	}
-	config.Previous = config.Next
-	config.Next = areaMap.Next
 
+	if areaMap.Next != nil {
+		config.Next = areaMap.Next
+	} else {
+		config.Next = nil
+	}
+	if areaMap.Previous != nil {
+		config.Previous = areaMap.Previous
+	} else {
+		config.Previous = nil
+	}
 	for _, result := range areaMap.Results {
 		fmt.Println(result.Name)
 	}
 	return nil
 }
-
 func commandMapb() error {
 	config := commands["mapb"].config
-	if config.Previous == "" {
+	if config.Previous == nil {
 		fmt.Println("you're on the first page")
 		return nil
 	}
-	res, err := http.Get(config.Previous)
+	areaMap, err := pokeapi.FetchLocationAreas(*config.Previous)
 	if err != nil {
-		return fmt.Errorf("failed to get response from endpoint: %v", err)
+		return err
 	}
-	body, err := io.ReadAll(res.Body)
-	res.Body.Close()
-	if res.StatusCode > 299 {
-		return fmt.Errorf("response failed with status code: %v and body: %s", res.StatusCode, body)
+
+	if areaMap.Next != nil {
+		config.Next = areaMap.Next
 	}
-	if err != nil {
-		return fmt.Errorf("error reading response %v", err)
+	if areaMap.Previous != nil {
+		config.Previous = areaMap.Previous
 	}
-	areaMap := locationArea{}
-	if err := json.Unmarshal(body, &areaMap); err != nil {
-		return fmt.Errorf("error unmarshalling data: %v", err)
-	}
-	config.Next = config.Previous
-	config.Previous = areaMap.Previous
 
 	for _, result := range areaMap.Results {
 		fmt.Println(result.Name)
 	}
-
 	return nil
 }
 
-type locationArea struct {
-	Count    int    `json:"count"`
-	Next     string `json:"next"`
-	Previous string `json:"previous"`
-	Results  []struct {
-		Name string `json:"name"`
-		URL  string `json:"url"`
-	} `json:"results"`
-}
-
 type config struct {
-	Next     string
-	Previous string
+	Next     *string
+	Previous *string
 }
 
 func init() {
@@ -201,9 +177,9 @@ func init() {
 			config:      &mapConfig,
 		},
 	}
-
+	mapStart := "https://pokeapi.co/api/v2/location-area/"
 	mapConfig = config{
-		Next:     "https://pokeapi.co/api/v2/location-area/",
-		Previous: "",
+		Next:     &mapStart,
+		Previous: nil,
 	}
 }
