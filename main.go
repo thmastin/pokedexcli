@@ -118,7 +118,6 @@ func commandMap() error {
 	mapConfig.Previous = mapConfig.Next
 	mapConfig.Next = areaMap.Next
 
-	fmt.Println(mapConfig)
 	for _, result := range areaMap.Results {
 		fmt.Println(result.Name)
 	}
