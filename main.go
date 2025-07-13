@@ -11,6 +11,7 @@ import (
 )
 
 var commands map[string]cliCommand
+var mapConfig config
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
@@ -98,7 +99,7 @@ Usage:`
 }
 
 func commandMap() error {
-	res, err := http.Get("https://pokeapi.co/api/v2/location-area/")
+	res, err := http.Get(mapConfig.Next)
 	if err != nil {
 		return fmt.Errorf("failed to get response from endpoint: %v", err)
 	}
@@ -110,11 +111,15 @@ func commandMap() error {
 	if err != nil {
 		return fmt.Errorf("error reading response %v", err)
 	}
-	area := locationArea{}
-	if err := json.Unmarshal(body, &area); err != nil {
+	areaMap := locationArea{}
+	if err := json.Unmarshal(body, &areaMap); err != nil {
 		return fmt.Errorf("error unmarshalling data: %v", err)
 	}
-	for _, result := range area.Results {
+	mapConfig.Previous = mapConfig.Next
+	mapConfig.Next = areaMap.Next
+
+	fmt.Println(mapConfig)
+	for _, result := range areaMap.Results {
 		fmt.Println(result.Name)
 	}
 	return nil
@@ -128,6 +133,11 @@ type locationArea struct {
 		Name string `json:"name"`
 		URL  string `json:"url"`
 	} `json:"results"`
+}
+
+type config struct {
+	Next     string
+	Previous any
 }
 
 func init() {
@@ -147,5 +157,10 @@ func init() {
 			description: "Displays 20 location areas",
 			callback:    commandMap,
 		},
+	}
+
+	mapConfig = config{
+		Next:     "https://pokeapi.co/api/v2/location-area/",
+		Previous: "",
 	}
 }
