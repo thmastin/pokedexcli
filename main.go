@@ -2,15 +2,19 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/thmastin/pokedexcli/internal/pokeapi"
+	"github.com/thmastin/pokedexcli/internal/pokecache"
 )
 
 var commands map[string]cliCommand
 var mapConfig config
+var pokeCache pokecache.Cache
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
@@ -101,11 +105,49 @@ Usage:`
 func commandMap() error {
 	config := commands["map"].config
 
-	areaMap, err := pokeapi.FetchLocationAreas(*config.Next)
+	var areaMap pokeapi.LocationAreaResponse
+	var err error
+
+	cacheKey := *config.Next
+	areaMap, err = fetchLocationAreaWithCache(cacheKey)
 	if err != nil {
 		return err
 	}
+	err = processLocationAreaResponse(areaMap, config)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
+func commandMapb() error {
+	config := commands["mapb"].config
+
+	var areaMap pokeapi.LocationAreaResponse
+	var err error
+
+	if config.Previous == nil {
+		fmt.Println("you're on the first page")
+		return nil
+	}
+	cacheKey := *config.Previous
+	areaMap, err = fetchLocationAreaWithCache(cacheKey)
+	if err != nil {
+		return err
+	}
+	err = processLocationAreaResponse(areaMap, config)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+type config struct {
+	Next     *string
+	Previous *string
+}
+
+func processLocationAreaResponse(areaMap pokeapi.LocationAreaResponse, config *config) error {
 	if areaMap.Next != nil {
 		config.Next = areaMap.Next
 	} else {
@@ -121,33 +163,32 @@ func commandMap() error {
 	}
 	return nil
 }
-func commandMapb() error {
-	config := commands["mapb"].config
-	if config.Previous == nil {
-		fmt.Println("you're on the first page")
-		return nil
-	}
-	areaMap, err := pokeapi.FetchLocationAreas(*config.Previous)
-	if err != nil {
-		return err
-	}
 
-	if areaMap.Next != nil {
-		config.Next = areaMap.Next
-	}
-	if areaMap.Previous != nil {
-		config.Previous = areaMap.Previous
-	}
+func fetchLocationAreaWithCache(apiURL string) (pokeapi.LocationAreaResponse, error) {
+	var areaMap pokeapi.LocationAreaResponse
+	var err error
 
-	for _, result := range areaMap.Results {
-		fmt.Println(result.Name)
-	}
-	return nil
-}
+	cachedData, found := pokeCache.Get(apiURL)
+	if found {
+		err = json.Unmarshal(cachedData, &areaMap)
+		if err != nil {
+			return pokeapi.LocationAreaResponse{}, fmt.Errorf("error unmarshaling cached data: %w", err)
+		}
+	} else {
 
-type config struct {
-	Next     *string
-	Previous *string
+		areaMap, err = pokeapi.FetchLocationAreas(apiURL)
+		if err != nil {
+			return pokeapi.LocationAreaResponse{}, err
+		}
+
+		dataToCache, marshalErr := json.Marshal(areaMap)
+		if marshalErr != nil {
+			return pokeapi.LocationAreaResponse{}, fmt.Errorf("error marshaling data for cache: %w", marshalErr)
+		}
+		pokeCache.Add(apiURL, dataToCache)
+	}
+	return areaMap, nil
+
 }
 
 func init() {
@@ -182,4 +223,5 @@ func init() {
 		Next:     &mapStart,
 		Previous: nil,
 	}
+	pokeCache = pokecache.NewCache(5 * time.Minute)
 }
