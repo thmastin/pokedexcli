@@ -6,7 +6,7 @@ func NewCache(interval time.Duration) Cache {
 	cache := Cache{}
 	cache.entries = make(map[string]cacheEntry)
 	cache.interval = interval
-	go cache.reapLoop(interval)
+	go cache.reapLoop()
 	return cache
 }
 
@@ -34,6 +34,12 @@ func (c Cache) reapLoop() {
 	ticker := time.NewTicker(c.interval)
 	for range ticker.C {
 		c.mu.Lock()
+		for key, entry := range c.entries {
+			entryAge := time.Now().Sub(entry.createdAt)
+			if entryAge > c.interval {
+				delete(c.entries, key)
+			}
+		}
 		c.mu.Unlock()
 	}
 
