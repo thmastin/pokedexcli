@@ -25,3 +25,22 @@ func FetchLocationAreas(url string) (LocationAreaResponse, error) {
 	}
 	return res, nil
 }
+
+func FetchEncounter(url string) (EncounterResponse, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return EncounterResponse{}, fmt.Errorf("failed to get response %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return EncounterResponse{}, fmt.Errorf("failed to read body: %w", err)
+	}
+
+	var res EncounterResponse
+	if err := json.Unmarshal(body, &res); err != nil {
+		return EncounterResponse{}, fmt.Errorf("failed to unmarshal: %w", err)
+	}
+	return res, nil
+}

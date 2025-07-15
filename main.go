@@ -16,6 +16,7 @@ var commands map[string]cliCommand
 var mapConfig config
 var pokeCache pokecache.Cache
 var exploreConfig config
+var encounterBaseUrl string
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
@@ -151,11 +152,16 @@ func commandMapb(seconduserInput string) error {
 	return nil
 }
 
-func commandExplore(area_name string) error {
-	config := commands["explore"].config
-
-	var areaMap pokeapi.LocationAreaResponse
-	var err error
+func commandExplore(seconduserInput string) error {
+	cacheKey := encounterBaseUrl + seconduserInput
+	encounter, err := fetchEncounterWithCache(cacheKey)
+	if err != nil {
+		return err
+	}
+	err = processEncounterResponse(encounter)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -178,6 +184,13 @@ func processLocationAreaResponse(areaMap pokeapi.LocationAreaResponse, config *c
 	}
 	for _, result := range areaMap.Results {
 		fmt.Println(result.Name)
+	}
+	return nil
+}
+
+func processEncounterResponse(encounter pokeapi.EncounterResponse) error {
+	for _, encounterEntry := range encounter.PokemonEncounters {
+		fmt.Println(encounterEntry.Pokemon.Name)
 	}
 	return nil
 }
@@ -207,6 +220,31 @@ func fetchLocationAreaWithCache(apiURL string) (pokeapi.LocationAreaResponse, er
 	}
 	return areaMap, nil
 
+}
+
+func fetchEncounterWithCache(apiURL string) (pokeapi.EncounterResponse, error) {
+	var encounter pokeapi.EncounterResponse
+	var err error
+
+	cachedData, found := pokeCache.Get(apiURL)
+	if found {
+		err = json.Unmarshal(cachedData, &encounter)
+		if err != nil {
+			return pokeapi.EncounterResponse{}, fmt.Errorf("error unmarshaling cached data: %w", err)
+		}
+	} else {
+		encounter, err = pokeapi.FetchEncounter(apiURL)
+		if err != nil {
+			return pokeapi.EncounterResponse{}, err
+		}
+
+		dataToCache, marshalErr := json.Marshal(encounter)
+		if marshalErr != nil {
+			return pokeapi.EncounterResponse{}, fmt.Errorf("error marshaling data for cache: %w", marshalErr)
+		}
+		pokeCache.Add(apiURL, dataToCache)
+	}
+	return encounter, nil
 }
 
 func init() {
@@ -239,7 +277,7 @@ func init() {
 			name:        "explore",
 			description: "Displays the poke youman you can find in the area",
 			callback:    commandExplore,
-			config:      &exploreConfig,
+			config:      nil,
 		},
 	}
 	mapStart := "https://pokeapi.co/api/v2/location-area/"
@@ -248,4 +286,5 @@ func init() {
 		Previous: nil,
 	}
 	pokeCache = pokecache.NewCache(5 * time.Minute)
+	encounterBaseUrl = "https://pokeapi.co/api/v2/location-area/"
 }
