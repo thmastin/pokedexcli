@@ -1,13 +1,10 @@
 package pokeapi
 
 type LocationAreaResponse struct {
-	Count    int     "json: count"
-	Next     *string "json: next"
-	Previous *string "json: previous"
-	Results  []struct {
-		Name string "json: name"
-		URL  string `json: "url"`
-	} "json: results"
+	Count    int            "json: count"
+	Next     *string        "json: next"
+	Previous *string        "json: previous"
+	Results  []LocationArea "json: results"
 }
 type EncounterResponse struct {
 	EncounterMethodRates []struct {
@@ -60,4 +57,8 @@ type EncounterResponse struct {
 			} `json:"version"`
 		} `json:"version_details"`
 	} `json:"pokemon_encounters"`
+}
+type LocationArea struct {
+	Name string `json:"name"`
+	URL  string `json:"url"`
 }

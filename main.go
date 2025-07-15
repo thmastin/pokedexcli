@@ -157,8 +157,22 @@ func commandExplore(seconduserInput string) error {
 	}
 
 	cacheKey := encounterBaseUrl + seconduserInput
-	areaName := seconduserInput
-	encounter, err := fetchEncounterWithCache(cacheKey, areaName)
+
+	cachedData, found := pokeCache.Get(cacheKey)
+	if found {
+		var encounter pokeapi.EncounterResponse
+		err := json.Unmarshal(cachedData, &encounter)
+		if err != nil {
+			return fmt.Errorf("invalid area: %s, please use the Pokedex 'map' command to see valid areas", seconduserInput)
+		}
+		err = processEncounterResponse(encounter, seconduserInput)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	encounter, err := fetchEncounterWithCache(cacheKey, seconduserInput)
 	if err != nil {
 		return err
 	}
@@ -166,13 +180,13 @@ func commandExplore(seconduserInput string) error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
 type config struct {
 	Next     *string
 	Previous *string
+	Results  []pokeapi.LocationArea
 }
 
 func processLocationAreaResponse(areaMap pokeapi.LocationAreaResponse, config *config) error {
@@ -186,6 +200,7 @@ func processLocationAreaResponse(areaMap pokeapi.LocationAreaResponse, config *c
 	} else {
 		config.Previous = nil
 	}
+	config.Results = areaMap.Results
 	for _, result := range areaMap.Results {
 		fmt.Println(result.Name)
 	}
@@ -295,6 +310,7 @@ func init() {
 	mapConfig = config{
 		Next:     &mapStart,
 		Previous: nil,
+		Results:  []pokeapi.LocationArea{},
 	}
 	pokeCache = pokecache.NewCache(5 * time.Minute)
 	encounterBaseUrl = "https://pokeapi.co/api/v2/location-area/"
