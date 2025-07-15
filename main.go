@@ -217,6 +217,12 @@ func init() {
 			callback:    commandMapb,
 			config:      &mapConfig,
 		},
+		"explore": {
+			name:        "explore",
+			description: "Displays the poke youman you can find in the area",
+			callback:    commandExplore,
+			config:      nil,
+		},
 	}
 	mapStart := "https://pokeapi.co/api/v2/location-area/"
 	mapConfig = config{
