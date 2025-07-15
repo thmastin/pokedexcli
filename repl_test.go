@@ -121,41 +121,62 @@ func TestDisplayOutput(t *testing.T) {
 
 func TestProcessCommand(t *testing.T) {
 	cases := []struct {
-		name     string
-		input    string
-		expected string
+		name           string
+		input          string
+		expectedFirst  string
+		expectedSecond string
 	}{
 		{
-			name:     "one word input no caps and no spaces",
-			input:    "hello",
-			expected: "hello",
+			name:           "one word input no caps and no spaces",
+			input:          "hello",
+			expectedFirst:  "hello",
+			expectedSecond: "",
 		},
 		{
-			name:     "one word input with caps",
-			input:    "HELLO",
-			expected: "hello",
+			name:           "one word input with caps",
+			input:          "HELLO",
+			expectedFirst:  "hello",
+			expectedSecond: "",
 		},
 		{
-			name:     "Multi word input with caps",
-			input:    "This is a test command a user may submit",
-			expected: "this",
+			name:           "Multi word input with caps",
+			input:          "This is a test command a user may submit",
+			expectedFirst:  "this",
+			expectedSecond: "is",
 		},
 		{
-			name:     "Empty input",
-			input:    "",
-			expected: "",
+			name:           "Empty input",
+			input:          "",
+			expectedFirst:  "",
+			expectedSecond: "",
 		},
 		{
-			name:     "Input all spaces",
-			input:    "     ",
-			expected: "",
+			name:           "Input all spaces",
+			input:          "     ",
+			expectedFirst:  "",
+			expectedSecond: "",
+		},
+		{
+			name:           "Multi word all lower case",
+			input:          "explore foo",
+			expectedFirst:  "explore",
+			expectedSecond: "foo",
+		},
+		{
+			name:           "Multi word with caps in second word",
+			input:          "explore FOO",
+			expectedFirst:  "explore",
+			expectedSecond: "foo",
 		},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			actual := processCommand(c.input)
-			if actual != c.expected {
-				t.Errorf("Expected: %v, Actual: %v", c.expected, actual)
+			actualFirst, actualSecond := processCommand(c.input)
+			if actualFirst != c.expectedFirst {
+				t.Errorf("Expected: %v, Actual: %v", c.expectedFirst, actualFirst)
+			}
+			if actualSecond != c.expectedSecond {
+				t.Errorf("Expected: %v, Actual: %v", c.expectedSecond, actualSecond)
 			}
 		})
 	}

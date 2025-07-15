@@ -151,6 +151,15 @@ func commandMapb(seconduserInput string) error {
 	return nil
 }
 
+func commandExplore(area_name string) error {
+	config := commands["explore"].config
+
+	var areaMap pokeapi.LocationAreaResponse
+	var err error
+
+	return nil
+}
+
 type config struct {
 	Next     *string
 	Previous *string
@@ -198,10 +207,6 @@ func fetchLocationAreaWithCache(apiURL string) (pokeapi.LocationAreaResponse, er
 	}
 	return areaMap, nil
 
-}
-
-func commandExplore(area_name string) error {
-	return nil
 }
 
 func init() {
