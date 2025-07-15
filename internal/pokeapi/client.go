@@ -26,12 +26,17 @@ func FetchLocationAreas(url string) (LocationAreaResponse, error) {
 	return res, nil
 }
 
-func FetchEncounter(url string) (EncounterResponse, error) {
+func FetchEncounter(url string, areaName string) (EncounterResponse, error) {
+
 	resp, err := http.Get(url)
 	if err != nil {
 		return EncounterResponse{}, fmt.Errorf("failed to get response %w", err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode == 404 {
+		return EncounterResponse{}, fmt.Errorf("invalid area: %v. please use the pokedex 'map' command to see valid areas", areaName)
+	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

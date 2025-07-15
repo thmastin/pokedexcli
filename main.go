@@ -15,7 +15,6 @@ import (
 var commands map[string]cliCommand
 var mapConfig config
 var pokeCache pokecache.Cache
-var exploreConfig config
 var encounterBaseUrl string
 
 func main() {
@@ -65,7 +64,7 @@ func startREPL(scanner *bufio.Scanner) {
 		if exists {
 			err := command.callback(seconduserInput)
 			if err != nil {
-				fmt.Printf("Error executing exit command: %v", err)
+				fmt.Printf("Error executing %v command: %v\n", userInput, err)
 			}
 		} else {
 			fmt.Println("Unknown command")
@@ -153,12 +152,17 @@ func commandMapb(seconduserInput string) error {
 }
 
 func commandExplore(seconduserInput string) error {
+	if seconduserInput == "" {
+		return fmt.Errorf("please enter an area name")
+	}
+
 	cacheKey := encounterBaseUrl + seconduserInput
-	encounter, err := fetchEncounterWithCache(cacheKey)
+	areaName := seconduserInput
+	encounter, err := fetchEncounterWithCache(cacheKey, areaName)
 	if err != nil {
 		return err
 	}
-	err = processEncounterResponse(encounter)
+	err = processEncounterResponse(encounter, seconduserInput)
 	if err != nil {
 		return err
 	}
@@ -188,8 +192,13 @@ func processLocationAreaResponse(areaMap pokeapi.LocationAreaResponse, config *c
 	return nil
 }
 
-func processEncounterResponse(encounter pokeapi.EncounterResponse) error {
-	fmt.Println("Exploring pastoria-city-area...")
+func processEncounterResponse(encounter pokeapi.EncounterResponse, areaName string) error {
+	if encounter.PokemonEncounters == nil {
+		fmt.Printf("No Pokemon found in %v", areaName)
+		return nil
+	}
+
+	fmt.Printf("Exploring %v...\n", areaName)
 	fmt.Println("Found Pokemon:")
 	for _, encounterEntry := range encounter.PokemonEncounters {
 		fmt.Printf(" - %v\n", encounterEntry.Pokemon.Name)
@@ -224,7 +233,7 @@ func fetchLocationAreaWithCache(apiURL string) (pokeapi.LocationAreaResponse, er
 
 }
 
-func fetchEncounterWithCache(apiURL string) (pokeapi.EncounterResponse, error) {
+func fetchEncounterWithCache(apiURL string, areaName string) (pokeapi.EncounterResponse, error) {
 	var encounter pokeapi.EncounterResponse
 	var err error
 
@@ -235,7 +244,7 @@ func fetchEncounterWithCache(apiURL string) (pokeapi.EncounterResponse, error) {
 			return pokeapi.EncounterResponse{}, fmt.Errorf("error unmarshaling cached data: %w", err)
 		}
 	} else {
-		encounter, err = pokeapi.FetchEncounter(apiURL)
+		encounter, err = pokeapi.FetchEncounter(apiURL, areaName)
 		if err != nil {
 			return pokeapi.EncounterResponse{}, err
 		}
