@@ -189,8 +189,10 @@ func processLocationAreaResponse(areaMap pokeapi.LocationAreaResponse, config *c
 }
 
 func processEncounterResponse(encounter pokeapi.EncounterResponse) error {
+	fmt.Println("Exploring pastoria-city-area...")
+	fmt.Println("Found Pokemon:")
 	for _, encounterEntry := range encounter.PokemonEncounters {
-		fmt.Println(encounterEntry.Pokemon.Name)
+		fmt.Printf(" - %v\n", encounterEntry.Pokemon.Name)
 	}
 	return nil
 }
