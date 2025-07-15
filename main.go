@@ -15,6 +15,7 @@ import (
 var commands map[string]cliCommand
 var mapConfig config
 var pokeCache pokecache.Cache
+var exploreConfig config
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
@@ -35,6 +36,13 @@ func getFirstWord(words []string) string {
 	return words[0]
 }
 
+func getSecondWord(words []string) string {
+	if len(words) < 2 {
+		return ""
+	}
+	return words[1]
+}
+
 func displayOutput(word string) string {
 	if word == "" {
 		return "Please enter a command\n"
@@ -51,10 +59,10 @@ func startREPL(scanner *bufio.Scanner) {
 			}
 			break
 		}
-		userInput := processCommand(scanner.Text())
+		userInput, seconduserInput := processCommand(scanner.Text())
 		command, exists := commands[userInput]
 		if exists {
-			err := command.callback()
+			err := command.callback(seconduserInput)
 			if err != nil {
 				fmt.Printf("Error executing exit command: %v", err)
 			}
@@ -65,13 +73,14 @@ func startREPL(scanner *bufio.Scanner) {
 	}
 }
 
-func processCommand(userInput string) string {
+func processCommand(userInput string) (string, string) {
 	inputCleaned := cleanInput(userInput)
-	firstWord := getFirstWord((inputCleaned))
-	return firstWord
+	firstWord := getFirstWord(inputCleaned)
+	secondWord := getSecondWord(inputCleaned)
+	return firstWord, secondWord
 }
 
-func commandExit() error {
+func commandExit(seconduserInput string) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
@@ -80,11 +89,11 @@ func commandExit() error {
 type cliCommand struct {
 	name        string
 	description string
-	callback    func() error
+	callback    func(string) error
 	config      *config
 }
 
-func commandHelp() error {
+func commandHelp(seconduserInput string) error {
 	fmt.Println(helpMessage())
 	return nil
 }
@@ -102,7 +111,7 @@ Usage:`
 
 }
 
-func commandMap() error {
+func commandMap(seconduserInput string) error {
 	config := commands["map"].config
 
 	var areaMap pokeapi.LocationAreaResponse
@@ -120,7 +129,7 @@ func commandMap() error {
 	return nil
 }
 
-func commandMapb() error {
+func commandMapb(seconduserInput string) error {
 	config := commands["mapb"].config
 
 	var areaMap pokeapi.LocationAreaResponse
@@ -191,6 +200,10 @@ func fetchLocationAreaWithCache(apiURL string) (pokeapi.LocationAreaResponse, er
 
 }
 
+func commandExplore(area_name string) error {
+	return nil
+}
+
 func init() {
 	commands = map[string]cliCommand{
 		"help": {
@@ -221,7 +234,7 @@ func init() {
 			name:        "explore",
 			description: "Displays the poke youman you can find in the area",
 			callback:    commandExplore,
-			config:      nil,
+			config:      &exploreConfig,
 		},
 	}
 	mapStart := "https://pokeapi.co/api/v2/location-area/"
