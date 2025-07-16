@@ -107,8 +107,8 @@ func helpMessage() string {
 	newMessage := `Welcome to the Pokedex!
 Usage:`
 	newMessage += "\n\n"
-	for key, value := range commands {
-		commandDescription := fmt.Sprintf("%v: %v\n", key, value.description)
+	for _, value := range commands {
+		commandDescription := fmt.Sprintf("%v: %v\n", value.name, value.description)
 		newMessage += commandDescription
 	}
 
@@ -366,7 +366,7 @@ func init() {
 	commands = map[string]cliCommand{
 		"help": {
 			name:        "help",
-			description: "Displays a help message",
+			description: "Displays this help message",
 			callback:    commandHelp,
 			config:      nil,
 		},
@@ -389,13 +389,13 @@ func init() {
 			config:      &mapConfig,
 		},
 		"explore": {
-			name:        "explore",
+			name:        "explore <area_name>",
 			description: "Displays the poke youman you can find in the area",
 			callback:    commandExplore,
 			config:      nil,
 		},
 		"catch": {
-			name:        "Catch",
+			name:        "catch <pokemon_name>",
 			description: "Attempts to catch a Pokemon",
 			callback:    commandCatch,
 			config:      nil,
