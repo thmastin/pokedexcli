@@ -225,7 +225,7 @@ func commandInspect(seconduserInput string) error {
 	if exists {
 		inspectOutput(pokemon)
 	} else {
-		return fmt.Errorf("%v is not in your pokedex, you can try to catch it by using the 'catch' command", seconduserInput)
+		fmt.Printf("%v is not in your pokedex, you can try to catch it by using the 'catch' command\n", seconduserInput)
 	}
 	return nil
 }
