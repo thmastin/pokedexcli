@@ -220,6 +220,30 @@ func commandCatch(seconduserInput string) error {
 	return nil
 }
 
+func commandInspect(seconduserInput string) error {
+	pokemon, exists := pokedex[seconduserInput]
+	if exists {
+		inspectOutput(pokemon)
+	} else {
+		return fmt.Errorf("%v is not in your pokedex, you can try to catch it by using the 'catch' command", seconduserInput)
+	}
+	return nil
+}
+
+func inspectOutput(pokemon pokeapi.Pokemon) {
+	fmt.Printf("Name: %s\n", pokemon.Name)
+	fmt.Printf("Height: %v\n", pokemon.Height)
+	fmt.Printf("Weight: %v\n", pokemon.Weight)
+	fmt.Println("Stats:")
+	for _, v := range pokemon.Stats {
+		fmt.Printf("  -%s: %v\n", v.Stat.Name, v.BaseStat)
+	}
+	fmt.Println("Types:")
+	for _, v := range pokemon.Types {
+		fmt.Printf("  -%s\n", v.Type.Name)
+	}
+}
+
 type config struct {
 	Next     *string
 	Previous *string
@@ -398,6 +422,12 @@ func init() {
 			name:        "catch <pokemon_name>",
 			description: "Attempts to catch a Pokemon",
 			callback:    commandCatch,
+			config:      nil,
+		},
+		"inspect": {
+			name:        "inspect <pokemon_name>",
+			description: "Shows you information about the Pokemon",
+			callback:    commandInspect,
 			config:      nil,
 		},
 	}
