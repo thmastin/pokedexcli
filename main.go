@@ -85,7 +85,7 @@ func processCommand(userInput string) (string, string) {
 	return firstWord, secondWord
 }
 
-func commandExit(seconduserInput string) error {
+func commandExit(_ string) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
@@ -98,7 +98,7 @@ type cliCommand struct {
 	config      *config
 }
 
-func commandHelp(seconduserInput string) error {
+func commandHelp(_ string) error {
 	fmt.Println(helpMessage())
 	return nil
 }
@@ -116,7 +116,7 @@ Usage:`
 
 }
 
-func commandMap(seconduserInput string) error {
+func commandMap(_ string) error {
 	config := commands["map"].config
 
 	var areaMap pokeapi.LocationAreaResponse
@@ -134,7 +134,7 @@ func commandMap(seconduserInput string) error {
 	return nil
 }
 
-func commandMapb(seconduserInput string) error {
+func commandMapb(_ string) error {
 	config := commands["mapb"].config
 
 	var areaMap pokeapi.LocationAreaResponse
@@ -242,6 +242,18 @@ func inspectOutput(pokemon pokeapi.Pokemon) {
 	for _, v := range pokemon.Types {
 		fmt.Printf("  -%s\n", v.Type.Name)
 	}
+}
+
+func commandPokedex(_ string) error {
+	if len(pokedex) > 0 {
+		fmt.Println("Your Pokedex:")
+		for _, v := range pokedex {
+			fmt.Printf("  - %s\n", v.Name)
+		}
+	} else {
+		fmt.Println("You do not have any Pokemon in your Pokedex. Use the 'catch' command to catch your first one!")
+	}
+	return nil
 }
 
 type config struct {
@@ -428,6 +440,12 @@ func init() {
 			name:        "inspect <pokemon_name>",
 			description: "Shows you information about the Pokemon",
 			callback:    commandInspect,
+			config:      nil,
+		},
+		"pokedex": {
+			name:        "pokedex",
+			description: "Shows you the Pokemon in your Pokedex",
+			callback:    commandPokedex,
 			config:      nil,
 		},
 	}
